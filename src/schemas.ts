@@ -28,7 +28,6 @@ export const cliArgsSchema =
                 asOfDate: asOfDate ? parseDate(asOfDate, 'MM/yyyy', new Date()) : undefined
             })
         )
-type CliArgs = z.infer<typeof cliArgsSchema>
 
 export const bondSchema = 
     z.tuple([
@@ -42,7 +41,7 @@ export const bondSchema =
         z.string().nonempty(),
 
         /** Issue Date */
-        z.string().nonempty().pipe(z.coerce.date()),
+        mmYYYYToDate,
     ]).transform(
         ([series, denomination, serialNumber, issueDate]) =>
             ({ series, denomination, serialNumber, issueDate })
