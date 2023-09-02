@@ -4,7 +4,7 @@ import { load as cheerioLoad } from 'cheerio'
 
 import { Bond, BondValue, bondValueTableRowSchema } from './schemas'
 
-const UA = 'https://github.com/zachstence/treasury-direct-savings-bonds-calculator'
+const UA = 'https://github.com/zachstence/savings-bonds-calculator'
 
 const client = axios.create({
     baseURL: 'https://treasurydirect.gov/'
