@@ -12,7 +12,6 @@ Calculate the value of your United States EE Paper Savings Bonds
 </p>
 
 ## Details
-
 This project is an alternative to the [Treasury Direct Paper Savings Bonds calculator](https://www.treasurydirect.gov/BC/SBCPrice). Input on that site is tedious and error prone. Instead, simply provide a CSV file to this script and it will get all the data for you.
 
 ## Setup
@@ -29,4 +28,16 @@ npm i
 # e.g.
 ./savings-bonds-calculator ./bonds.csv
 ./savings-bonds-calculator ./bonds.csv 01/2020
+```
+
+## CSV Format
+The CSV should have 4 columns: Series, Denomination, Serial Number, Issue Date
+
+The CSV should have no header
+
+e.g.
+```csv
+EE,100,ABC123ABC123,01/2000
+EE,50,ABC123ABC123,02/2000
+EE,25,ABC123ABC123,02/2000
 ```
