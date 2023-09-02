@@ -12,6 +12,24 @@ const dollarAmount = z.string().startsWith('$').transform(s => parseFloat(s.subs
 
 const interestRate = z.string().endsWith('%').transform(s => parseFloat(s.substring(0, s.length - 1)) / 100)
 
+export const cliArgsSchema =
+    z.array(z.string())
+        .refine(([_, __, inputCsvFilePath, ____]) => 
+            typeof inputCsvFilePath === 'string',
+            { message: 'inputCsvFilePath is required' }
+        )
+        .refine(([_, __, ___, asOfDate]) => 
+            !asOfDate || /\d\d\/\d\d\d\d/.test(asOfDate),
+            { message: 'asOfDate should be in MM/YYYY format' }
+        )
+        .transform(([_, __, inputCsvFilePath, asOfDate]) =>
+            ({
+                inputCsvFilePath,
+                asOfDate: asOfDate ? parseDate(asOfDate, 'MM/yyyy', new Date()) : undefined
+            })
+        )
+type CliArgs = z.infer<typeof cliArgsSchema>
+
 export const bondSchema = 
     z.tuple([
         /** Series */

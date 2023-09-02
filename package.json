@@ -13,6 +13,7 @@
     "url": "https://github.com/zachstence/savings-bonds-calculator"
   },
   "scripts": {
+    "start": "ts-node src/main.ts",
     "dev": "nodemon src/main.ts"
   },
   "devDependencies": {
