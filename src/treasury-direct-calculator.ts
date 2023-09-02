@@ -4,6 +4,8 @@ import { load as cheerioLoad } from 'cheerio'
 
 import { Bond, BondValue, bondValueTableRowSchema } from './schemas'
 
+const UA = 'https://github.com/zachstence/treasury-direct-savings-bonds-calculator'
+
 const client = axios.create({
     baseURL: 'https://treasurydirect.gov/'
 })
@@ -49,6 +51,7 @@ export const calculateBondValue = async (bond: Bond, redemptionDate = new Date()
             headers: {
                 'Cache-Control': 'no-cache',
                 'Content-Type': 'application/x-www-form-urlencoded',
+                'User-Agent': UA,
             }
         })
     
