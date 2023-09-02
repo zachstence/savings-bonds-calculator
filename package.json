@@ -1,4 +1,17 @@
 {
+  "name": "treasury-direct-savings-bonds-calculator",
+  "version": "0.0.1",
+  "description": "Calculate the values of your savings bonds using the official TreasuryDirect.gov calculator",
+  "homepage": "https://github.com/zachstence/treasury-direct-savings-bonds-calculator",
+  "license": "MIT",
+  "author": {
+    "name": "Zach Stence",
+    "url": "https://github.com/zachstence"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zachstence/treasury-direct-savings-bonds-calculator"
+  },
   "scripts": {
     "dev": "nodemon src/main.ts"
   },
