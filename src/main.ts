@@ -10,6 +10,9 @@ const main = async (): Promise<void> => {
     
     const bondValues = await calculateBondValues(bonds)
     console.table(bondValues)
+
+    const totalValue = bondValues.reduce<number>((acc, bondValue) => acc += bondValue.value, 0)
+    console.log('Total Value', totalValue)
 }
 
 main()
