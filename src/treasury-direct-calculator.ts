@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { format } from 'date-fns'
+import { format, getMonth, getYear, startOfMonth } from 'date-fns'
 import { load as cheerioLoad } from 'cheerio'
 
 import { Bond, BondValue, bondValueTableRowSchema } from './schemas'
@@ -36,15 +36,65 @@ const getPostBody = (bond: Bond, redemptionDate = new Date()): string => {
     return rawData
 }
 
+export class TreasuryDirectCalculatorError extends Error {}
+
 const parseBondCalculatorHtml = (html: string): BondValue => {
     const $ = cheerioLoad(html)
-    const cells = $('table.bnddata td').toArray().map(elm => $(elm).text())
-    const bondValue = bondValueTableRowSchema.parse(cells)
-    return bondValue
+
+    const resultsTable = $('table.bnddata')
+    if (resultsTable.length) {
+        const cells = resultsTable.find('td').toArray().map(elm => $(elm).text())
+        const bondValue = bondValueTableRowSchema.parse(cells)
+        return bondValue
+    }
+
+    const errorMessage = $('.errormessage')
+    if (errorMessage.length) {
+        const firstError = errorMessage.find('li').toArray().map(elm => $(elm).text())[0]
+        throw new TreasuryDirectCalculatorError(firstError)
+    }
+
+    throw new Error('Failed to parse TreasuryDirect calculator HTML response')
 }
 
-export const calculateBondValue = async (bond: Bond, redemptionDate = new Date()): Promise<BondValue> => {
-    const data = getPostBody(bond, redemptionDate)
+const MAY_MONTH_INDEX = 4
+const NOVEMBER_MONTH_INDEX = 10
+
+const getMaxValueAsOfDate = (): Date => {
+    const now = Date.now()
+    const nowYear = getYear(now)
+    const nowMonth = getMonth(now)
+
+    let maxMonthIndex: number
+    let nextYear: boolean
+    if (nowMonth < MAY_MONTH_INDEX) {
+        maxMonthIndex = MAY_MONTH_INDEX
+        nextYear = false
+    } else if (nowMonth < NOVEMBER_MONTH_INDEX) {
+        maxMonthIndex = NOVEMBER_MONTH_INDEX
+        nextYear = false
+    } else {
+        maxMonthIndex = MAY_MONTH_INDEX
+        nextYear = true
+    }
+
+    const year = nextYear ? nowYear + 1 : nowYear
+    const maxValueAsOfDate = new Date(year, maxMonthIndex)
+    return maxValueAsOfDate
+}
+
+type BondValueAsOfDate = {
+    valueAsOfDate: Date
+    bondValue: BondValue
+}
+
+type BondValuesAsOfDate = {
+    valuesAsOfDate: Date
+    bondValues: BondValue[]
+}
+
+export const calculateBondValue = async (bond: Bond, valueAsOfDate = getMaxValueAsOfDate()): Promise<BondValueAsOfDate> => {
+    const data = getPostBody(bond, valueAsOfDate)
 
     try {
         const res = await client.post('/BC/SBCPrice', data, {
@@ -56,7 +106,11 @@ export const calculateBondValue = async (bond: Bond, redemptionDate = new Date()
         })
     
         const bondValue = parseBondCalculatorHtml(res.data)
-        return bondValue
+
+        return {
+            valueAsOfDate,
+            bondValue,
+        }
     } catch (e) {
         if (axios.isAxiosError(e)) {
             const body = e.response?.data
@@ -66,4 +120,16 @@ export const calculateBondValue = async (bond: Bond, redemptionDate = new Date()
     }
 }
 
-export const calculateBondValues = async (bonds: Bond[], redemptionDate = new Date()): Promise<BondValue[]> => Promise.all(bonds.map(bond => calculateBondValue(bond, redemptionDate)))
+export const calculateBondValues = async (bonds: Bond[], valuesAsOfDate = getMaxValueAsOfDate()): Promise<BondValuesAsOfDate> => {
+    const bondValues = await Promise.all(
+        bonds.map(async bond => {
+            const { bondValue } = await calculateBondValue(bond, valuesAsOfDate)
+            return bondValue
+        })
+    )
+
+    return {
+        valuesAsOfDate,
+        bondValues,
+    }
+}
